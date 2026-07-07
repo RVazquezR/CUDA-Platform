@@ -1,0 +1,20 @@
+<!--
+  ******************************************************************************
+  * ARCHIVO: app.html                                                          *
+  * AUTOR: Raúl Vázquez Rodríguez                                              *
+  *                                                                            *
+  * DESCRIPCIÓN:                                                               *
+  * Plantilla raíz de la aplicación Angular.                                   *
+  * Actúa como contenedor principal donde el sistema de enrutamiento           *
+  * dinámico inserta los componentes asociados a cada ruta activa.             *
+  * No contiene lógica visual propia ni elementos de interfaz, ya que          *
+  * toda la navegación es gestionada mediante Angular Router.                  *
+  ******************************************************************************
+-->
+
+<!--
+  Punto de anclaje del sistema de rutas de Angular
+  El componente asociado a la URL actual será renderizado automáticamente en 
+  esta posición del DOM
+-->
+<router-outlet></router-outlet>

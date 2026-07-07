@@ -1,0 +1,56 @@
+/******************************************************************************
+ * ARCHIVO: styles.scss                                                       *
+ * AUTOR: Raúl Vázquez Rodríguez                                              *
+ *                                                                            *
+ * DESCRIPCIÓN:                                                               *
+ * Hoja de estilos global de la aplicación. Define la configuración base de   *
+ * Tailwind CSS, los estilos generales aplicables a todo el sistema y las     *
+ * personalizaciones visuales compartidas entre todos los componentes.        *
+ ******************************************************************************/
+
+// Carga las capas base de Tailwind CSS
+@tailwind base;
+
+// Carga los componentes reutilizables de Tailwind CSS
+@tailwind components;
+
+// Carga las utilidades de Tailwind CSS
+@tailwind utilities;
+
+/*
+ * Configuración visual global
+ */
+body {
+    // Aplica fondo base, color de texto y suavizado de fuentes
+    @apply bg-slate-50 text-slate-800 antialiased;
+
+    // Tipografía principal de la aplicación
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
+    // Eliminación de márgenes por defecto
+    margin: 0;
+
+    // Eliminación de rellenos por defecto
+    padding: 0;
+}
+
+// Define las dimensiones geométricas del carril de desplazamiento
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+// Fuerza la transparencia del fondo del carril para integrarlo en la interfaz
+::-webkit-scrollbar-track {
+    @apply bg-transparent;
+}
+
+// Define la apariencia visual del control deslizante
+::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full;
+}
+
+// Aplica retroalimentación visual al interactuar con el indicador móvil
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400;
+}

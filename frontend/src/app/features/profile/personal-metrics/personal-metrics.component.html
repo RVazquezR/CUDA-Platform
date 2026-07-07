@@ -1,0 +1,171 @@
+<div class="flex h-screen bg-background text-white overflow-hidden">
+  <app-sidenav class="h-full flex-shrink-0"></app-sidenav>
+  <div class="flex-1 flex flex-col min-w-0">
+    <app-header class="flex-shrink-0"></app-header>
+
+    <main class="flex-1 p-6 lg:p-10 overflow-y-auto custom-scrollbar relative">
+      <div *ngIf="isLoading()" class="absolute inset-0 z-50 flex items-center justify-center">
+        <div class="w-10 h-10 border-4 border-cuda border-t-transparent rounded-full animate-spin"></div>
+      </div>
+
+      <div class="max-w-[1200px] mx-auto h-full animate-fade-in" *ngIf="!isLoading() && metrics() as data">
+        
+        <div class="mb-8">
+          <h2 class="text-3xl font-bold text-white mb-1">Métricas Personales</h2>
+          <p class="text-slate-400 text-sm">Análisis de rendimiento de tus algoritmos CUDA y almacenamiento personal.</p>
+        </div>
+
+        <div *ngIf="isQuotaExceeded()" class="mb-8 p-4 bg-danger/10 border-l-4 border-danger rounded-r-lg flex items-start gap-4 shadow-lg animate-bounce-subtle">
+          <div class="p-2 bg-danger/20 rounded-full mt-1">
+            <svg class="w-5 h-5 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          </div>
+          <div>
+            <h4 class="text-danger font-bold">Cuota de Almacenamiento Excedida</h4>
+            <p class="text-danger/80 text-sm mt-1">Has superado el límite de almacenamiento permitido. Debes borrar archivos antiguos en el Workspace para que tus futuros algoritmos puedan guardar resultados.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          
+          <div class="bg-[#050505] border border-blue-400/20 rounded-xl p-5 shadow-inner relative overflow-hidden flex flex-col justify-between h-full group transition-all hover:border-blue-400/40">
+            <div class="absolute inset-0 bg-blue-500/5 pointer-events-none"></div>
+            <div class="mb-3">
+              <p class="text-blue-400/70 text-[10px] font-bold uppercase tracking-widest mb-1 relative z-10">En Cola</p>
+              <p class="text-3xl font-bold text-blue-400 relative z-10">{{ data.executions.pending_or_processing }}</p>
+            </div>
+            <div class="mt-auto pt-3 border-t border-blue-400/10 relative z-10">
+              <p class="text-[10px] text-blue-400/60 leading-tight">Tareas esperando recursos o en ejecución actual.</p>
+            </div>
+          </div>
+
+          <div class="bg-[#050505] border border-cuda/20 rounded-xl p-5 shadow-inner relative overflow-hidden flex flex-col justify-between h-full group transition-all hover:border-cuda/40">
+            <div class="absolute inset-0 bg-cuda/5 pointer-events-none"></div>
+            <div class="mb-3">
+              <p class="text-cuda/70 text-[10px] font-bold uppercase tracking-widest mb-1 relative z-10">Éxito</p>
+              <p class="text-3xl font-bold text-cuda relative z-10">{{ data.executions.completed }}</p>
+            </div>
+            <div class="mt-auto pt-3 border-t border-cuda/10 relative z-10">
+              <p class="text-[10px] text-cuda/60 leading-tight">Códigos compilados y finalizados correctamente.</p>
+            </div>
+          </div>
+          
+          <div class="bg-[#050505] border border-danger/20 rounded-xl p-5 shadow-inner relative overflow-hidden flex flex-col justify-between h-full group transition-all hover:border-danger/40">
+            <div class="absolute inset-0 bg-danger/5 pointer-events-none"></div>
+            <div class="mb-3">
+              <p class="text-danger/70 text-[10px] font-bold uppercase tracking-widest mb-1 relative z-10">Error</p>
+              <p class="text-3xl font-bold text-danger relative z-10">{{ data.executions.failed }}</p>
+            </div>
+            <div class="mt-auto pt-3 border-t border-danger/10 relative z-10">
+              <p class="text-[10px] text-danger/60 leading-tight">Fallos de código, compilación o bucles infinitos.</p>
+            </div>
+          </div>
+
+          <div class="bg-[#050505] border border-warning/20 rounded-xl p-5 shadow-inner relative overflow-hidden flex flex-col justify-between h-full group transition-all hover:border-warning/40">
+            <div class="absolute inset-0 bg-warning/5 pointer-events-none"></div>
+            <div class="mb-3">
+              <p class="text-warning/70 text-[10px] font-bold uppercase tracking-widest mb-1 relative z-10">Abortado</p>
+              <p class="text-3xl font-bold text-warning relative z-10">{{ data.executions.cancelled }}</p>
+            </div>
+            <div class="mt-auto pt-3 border-t border-warning/10 relative z-10">
+              <p class="text-[10px] text-warning/60 leading-tight">Detenidas manualmente.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[400px]">
+          
+          <div class="bg-surface border border-surfaceBorder rounded-2xl p-6 shadow-lg h-full flex flex-col">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-6">
+              <svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+              Rendimiento Global
+            </h3>
+
+            <div class="flex-1 flex flex-col items-center justify-center relative min-h-[250px] mb-4">
+              <div class="relative w-48 h-48">
+                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                  <path class="text-surfaceBorder" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3"></path>
+                  <path [ngClass]="getSuccessRate() > 50 ? 'text-cuda' : (getSuccessRate() > 20 ? 'text-warning' : 'text-danger')"
+                        [attr.stroke-dasharray]="getSuccessRate() + ', 100'"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
+                        fill="none" stroke="currentColor" stroke-width="3" class="transition-all duration-1000 ease-out"></path>
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                  <span class="text-4xl font-black text-white">{{ getSuccessRate() }}%</span>
+                  <span class="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Win Rate</span>
+                </div>
+              </div>
+              <p class="text-slate-400 text-sm mt-6 text-center">Peticiones totales realizadas: {{ data.executions.total }}</p>
+            </div>
+
+            <div class="mt-auto pt-5 border-t border-surfaceBorder/50">
+              <div class="bg-darker/50 rounded-xl p-4 flex gap-3 items-start border border-surfaceBorder/30">
+                <svg class="w-5 h-5 text-cuda flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <p class="text-xs text-slate-400 leading-relaxed m-0">
+                  <strong class="text-slate-200">Win Rate:</strong> Porcentaje de algoritmos que han finalizado exitosamente sin errores. Indica la estabilidad y optimización del código que envías a la GPU.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-surface border border-surfaceBorder rounded-2xl p-6 shadow-lg h-full flex flex-col">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-6">
+              <svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+              Cuota de Almacenamiento
+            </h3>
+            
+            <div class="flex-1 flex flex-col justify-center mb-4">
+              <div class="flex justify-between items-end mb-2">
+                <span class="text-3xl font-bold text-white">{{ formatMB(data.storage.total_bytes) }} <span class="text-lg text-slate-500 font-medium">MB</span></span>
+                <span class="text-sm font-bold text-slate-400">/ {{ data.quotaMB || 200 }} MB Límite</span>
+              </div>
+              
+              <div class="h-4 w-full bg-[#050505] rounded-full overflow-hidden border border-surfaceBorder mb-6 shadow-inner">
+                <div class="h-full rounded-full transition-all duration-1000 ease-out"
+                     [ngClass]="getStoragePercentage() > 90 ? 'bg-danger' : (getStoragePercentage() > 70 ? 'bg-warning' : 'bg-cuda')"
+                     [style.width]="getStoragePercentage() + '%'">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                
+                <div class="flex items-center gap-3 p-4 bg-slate-500/5 border border-slate-500/20 rounded-xl hover:bg-slate-500/10 transition-colors shadow-sm">
+                  <div class="w-10 h-10 rounded-lg bg-cuda/10 flex items-center justify-center flex-shrink-0 shadow-inner">
+                    <svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  </div>
+                  <div>
+                    <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5">Archivos</p>
+                    <p class="text-xl font-bold text-white leading-none">{{ data.storage.total_files }}</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3 p-4 bg-slate-500/5 border border-slate-500/20 rounded-xl hover:bg-slate-500/10 transition-colors shadow-sm">
+                  <div class="w-10 h-10 rounded-lg bg-blue-400/10 flex items-center justify-center flex-shrink-0 shadow-inner">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                  </div>
+                  <div>
+                    <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5">Uso Disco</p>
+                    <p class="text-xl font-bold text-white leading-none">{{ getStoragePercentage().toFixed(1) }}%</p>
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+
+            <div class="mt-auto pt-5 border-t border-surfaceBorder/50">
+              <div class="bg-darker/50 rounded-xl p-4 flex gap-3 items-start border border-surfaceBorder/30">
+                <svg class="w-5 h-5 text-warning flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <p class="text-xs text-slate-400 leading-relaxed m-0">
+                  <strong class="text-slate-200">Aviso:</strong> Los <em>"Recursos Globales"</em> compartidos por el profesor no consumen tu almacenamiento. Pero si superas el límite al generar archivos en una ejecución, se descartarán automáticamente.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>

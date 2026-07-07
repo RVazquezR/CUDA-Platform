@@ -1,0 +1,82 @@
+/*******************************************************************************
+ * ARCHIVO: code-editor.component.scss                                         *
+ * AUTOR: Raúl Vázquez Rodríguez                                               *
+ *                                                                             *
+ * DESCRIPCIÓN:                                                                *
+ * Hoja de estilos asociada al editor de código CUDA.                          *
+ * Define el comportamiento visual del editor, la consola de salida y los      *
+ * elementos interactivos relacionados con el redimensionado y desplazamiento  *
+ * de contenido.                                                               *
+ ******************************************************************************/
+
+/*******************************************************************************
+ * EDITOR DE CÓDIGO
+ *******************************************************************************/
+
+/*
+ * Configura el comportamiento visual del área principal de edición de código
+ */
+textarea {
+
+   // Conserva espacios y saltos de línea originales
+   white-space: pre;
+
+   // Habilita barras de desplazamiento cuando sean necesarias
+   overflow: auto;
+
+   // Define el tamaño visual de los tabuladores
+   tab-size: 4;
+   
+   // Muestra el cursor de inserción de texto cuando el usuario interactúa
+   cursor: text;
+   
+   // Añade separación lateral para separar el contenido de las barras de scroll
+   padding-right: 20px;
+   padding-bottom: 20px;
+}
+
+/*******************************************************************************
+ * CONSOLA DE SALIDA
+ ******************************************************************************/
+
+/*
+* Configura el comportamiento visual de la consola
+* utilizada para mostrar logs y resultados.
+*/
+.console-body {
+
+   // Conserva espacios y saltos de línea originales
+   white-space: pre;
+
+   // Habilita barras de desplazamiento cuando sean necesarias
+   overflow: auto;
+   
+   // Permite seleccionar fácilmente el contenido mostrado en la consola
+   cursor: text;
+}
+
+/*******************************************************************************
+ * BARRAS DE DESPLAZAMIENTO PERSONALIZADAS
+ *******************************************************************************/
+
+/*
+ * Mantiene reservado el espacio destinado a las barras de desplazamiento 
+ * para evitar saltos visuales
+ */
+.custom-scrollbar {
+   scrollbar-gutter: stable;
+}
+
+/*******************************************************************************
+ * DIVISOR REDIMENSIONABLE
+ *******************************************************************************/
+
+/*
+ * Configura el cursor utilizado sobre el divisor encargado de modificar 
+ * la altura del editor
+ */
+.cursor-row-resize {
+
+   // Fuerza la visualización del cursor de redimensionado con doble flecha
+   cursor: row-resize !important;
+}

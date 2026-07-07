@@ -1,0 +1,159 @@
+<div class="flex h-screen bg-background text-white overflow-hidden relative">
+  <app-sidenav class="h-full flex-shrink-0"></app-sidenav>
+  
+  <div class="flex-1 flex flex-col min-w-0">
+    <app-header class="flex-shrink-0"></app-header>
+
+    <main class="flex-1 p-6 lg:p-10 overflow-y-auto custom-scrollbar relative">
+      
+      <div *ngIf="isLoading()" class="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <div class="w-10 h-10 border-4 border-cuda border-t-transparent rounded-full animate-spin"></div>
+      </div>
+
+      <div class="max-w-[1200px] mx-auto h-full" *ngIf="!isLoading()">
+        
+        <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          
+          <div>
+            <h2 class="text-3xl font-bold text-white mb-1">Recursos Globales</h2>
+            <p class="text-slate-400 text-sm">Gestiona los archivos disponibles para todos los alumnos.</p>
+          </div>
+
+          <div class="border rounded-xl px-5 py-3 flex items-center gap-4 shadow-inner transition-colors duration-500"
+                 [ngClass]="isQuotaExceeded() ? 'bg-danger/10 border-danger/50' : 'bg-surfaceBorder/20 border-surfaceBorder/50'">
+              
+              <div class="text-right">
+                <p class="text-[10px] font-bold uppercase tracking-widest transition-colors"
+                   [ngClass]="isQuotaExceeded() ? 'text-danger' : 'text-slate-500'">Uso Global en Disco</p>
+                
+                <p class="text-xl font-black transition-colors"
+                   [ngClass]="isQuotaExceeded() ? 'text-danger' : 'text-white'">
+                  {{ formatBytes(totalGlobalBytes()) }} 
+                  <span class="font-medium text-xs transition-colors"
+                        [ngClass]="isQuotaExceeded() ? 'text-danger/70' : 'text-slate-500'">/ {{ storageQuotaMB() }} MB</span>
+                </p>
+              </div>
+              
+              <div class="w-10 h-10 rounded-full border-2 flex items-center justify-center bg-darker transition-colors"
+                   [ngClass]="isQuotaExceeded() ? 'border-danger/50' : 'border-purple-500/30'">
+                 <svg *ngIf="!isQuotaExceeded()" class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                 <svg *ngIf="isQuotaExceeded()" class="w-5 h-5 text-danger animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              </div>
+          </div>
+        </div>
+
+        <div *ngIf="isQuotaExceeded()" class="mb-8 p-4 bg-danger/10 border-l-4 border-danger rounded-r-lg flex items-start gap-4 shadow-lg animate-fade-in">
+          <div class="p-2 bg-danger/20 rounded-full mt-1">
+            <svg class="w-5 h-5 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          </div>
+          <div>
+            <h4 class="text-danger font-bold text-base">Inconsistencia de Almacenamiento</h4>
+            <p class="text-sm text-danger/80 mt-1">
+              El espacio utilizado actual supera el nuevo límite de infraestructura de {{ storageQuotaMB() }} MB. 
+              <strong>El clúster ha bloqueado nuevas subidas.</strong> Debes eliminar recursos obsoletos o restaurar la cuota en el Dashboard Global para restablecer el servicio.
+            </p>
+          </div>
+        </div>
+
+        <div *ngIf="actionMessage()" class="mb-8 p-4 rounded-lg text-sm font-medium animate-fade-in shadow-lg flex items-center gap-3"
+             [ngClass]="actionMessage()!.type === 'success' ? 'bg-cuda/10 text-cuda border border-cuda/20' : 'bg-danger/10 text-danger border border-danger/20'">
+          <svg *ngIf="actionMessage()!.type === 'success'" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <svg *ngIf="actionMessage()!.type === 'error'" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          {{ actionMessage()!.text }}
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          <div class="lg:col-span-1 space-y-6">
+            <div class="bg-surface rounded-xl border border-surfaceBorder p-6 shadow-lg">
+              <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                Inyectar Archivo
+              </h3>
+              <p class="text-xs text-slate-400 mb-6">El archivo estará disponible instantáneamente en el IDE de todos los alumnos.</p>
+              
+              <div class="relative group">
+                <input 
+                  type="file" 
+                  (change)="onFileSelected($event)" 
+                  [disabled]="isUploading()"
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
+                >
+                <div class="border-2 border-dashed border-surfaceBorder rounded-xl p-8 text-center group-hover:border-cuda group-hover:bg-cuda/5 transition-all bg-[#050505] shadow-inner flex flex-col items-center justify-center min-h-[200px]"
+                     [ngClass]="{'border-cuda bg-cuda/5': isUploading()}">
+                  
+                  <svg *ngIf="!isUploading()" class="h-10 w-10 text-slate-500 group-hover:text-cuda transition-colors mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                  
+                  <div *ngIf="isUploading()" class="h-10 w-10 animate-spin rounded-full border-4 border-cuda border-t-transparent mb-3 shadow-[0_0_15px_rgba(118,185,0,0.5)]"></div>
+                  
+                  <p class="text-sm font-bold" [ngClass]="isUploading() ? 'text-cuda' : 'text-slate-300'">
+                    {{ isUploading() ? 'Inyectando en clúster...' : 'Haz clic o arrastra un archivo' }}
+                  </p>
+                  <p *ngIf="!isUploading()" class="text-[10px] uppercase tracking-widest text-slate-500 mt-2 font-bold">Máx. {{ storageQuotaMB() }} MB</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 flex gap-3 items-start">
+              <svg class="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <p class="text-xs text-blue-300 leading-relaxed">Los archivos subidos aquí se copian en el entorno temporal de ejecución (Sandbox) de los alumnos mediante hard links, asegurando que el archivo original nunca sea modificado por sus programas CUDA.</p>
+            </div>
+          </div>
+
+          <div class="lg:col-span-2">
+            <div class="bg-surface rounded-xl border border-surfaceBorder shadow-xl overflow-hidden h-full flex flex-col">
+              
+              <div class="p-5 border-b border-surfaceBorder bg-darker flex justify-between items-center">
+                <h3 class="text-sm font-bold text-slate-300 uppercase tracking-widest">Almacenamiento Global</h3>
+                <span class="bg-[#050505] px-3 py-1 rounded-full text-xs font-bold text-cuda border border-surfaceBorder">
+                  {{ globalFiles().length }} Archivos
+                </span>
+              </div>
+
+              <div class="flex-1 overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                  <thead class="text-xs uppercase bg-[#050505] text-slate-500 font-bold border-b border-surfaceBorder/50">
+                    <tr>
+                      <th class="px-5 py-3">Archivo</th>
+                      <th class="px-5 py-3">Tamaño</th>
+                      <th class="px-5 py-3 text-right">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-surfaceBorder/50">
+                    
+                    <tr *ngIf="globalFiles().length === 0">
+                      <td colspan="3" class="px-5 py-16 text-center">
+                        <svg class="w-12 h-12 text-slate-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                        <p class="text-slate-500 italic">No hay recursos globales en el servidor.</p>
+                      </td>
+                    </tr>
+
+                    <tr *ngFor="let file of globalFiles()" class="hover:bg-white/5 transition-colors">
+                      <td class="px-5 py-4">
+                        <div class="flex items-center gap-3">
+                          <svg class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          <span class="font-bold text-white">{{ file.original_name }}</span>
+                        </div>
+                      </td>
+                      <td class="px-5 py-4 font-mono text-xs text-slate-400">
+                        {{ formatBytes(file.size_bytes) }}
+                      </td>
+                      <td class="px-5 py-4 text-right">
+                        <button (click)="deleteGlobalFile(file)" title="Eliminar Globalmente" 
+                                class="p-2 text-slate-400 hover:text-danger hover:bg-danger/10 rounded border border-transparent hover:border-danger/20 transition-all">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                      </td>
+                    </tr>
+
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

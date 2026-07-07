@@ -1,0 +1,170 @@
+<div class="h-full flex flex-col bg-surface rounded-xl border border-surfaceBorder overflow-hidden shadow-lg">
+
+  <div *ngIf="!isAdmin() && availableTokens() === 0" class="bg-warning/10 border-b border-warning/20 px-4 py-2 flex items-center justify-center gap-3 flex-shrink-0 transition-all duration-500">
+    <svg class="w-4 h-4 text-warning flex-shrink-0 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+    <p class="text-warning text-[11px] uppercase tracking-wider font-bold">
+      Tokens agotados · Las ejecuciones se colocan al final de la cola
+    </p>
+  </div>
+
+  <div class="h-14 border-b border-surfaceBorder bg-darker/80 flex items-center justify-between px-4 flex-shrink-0">
+    
+    <div class="flex items-center gap-3">
+      <svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+      </svg>
+      <span class="text-white font-semibold text-sm tracking-wide">main.cu</span>
+    </div>
+
+    <div class="flex items-center gap-4">
+      
+      <div *ngIf="isAdmin() || availableTokens() !== null" 
+          class="group relative hidden sm:flex items-center bg-[#050505] rounded-md border border-surfaceBorder px-3 py-1.5 shadow-inner transition-colors duration-300 cursor-help"
+          [ngClass]="{
+            'border-warning/30 bg-warning/5': !isAdmin() && availableTokens() === 0,
+            'border-purple-500/30 bg-purple-500/5': isAdmin()
+          }">
+        
+        <div class="absolute top-full left-1/2 -translate-x-1/2 mt-3 px-3 py-2 bg-darker border border-cuda/30 rounded shadow-2xl pointer-events-none opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-50 whitespace-nowrap">
+          <div class="flex items-center gap-2">
+            <svg *ngIf="isAdmin()" class="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+            <svg *ngIf="!isAdmin()" class="w-3.5 h-3.5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            
+            <span *ngIf="isAdmin()" class="text-[10px] text-slate-200 font-medium tracking-wide">Privilegios de Administración</span>
+            <span *ngIf="!isAdmin()" class="text-[10px] text-slate-200 font-medium tracking-wide">Recarga automática establecida por el administrador </span>
+          </div>
+          <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-darker border-l border-t border-cuda/30 rotate-45"></div>
+        </div>
+
+        <svg *ngIf="isAdmin()" class="w-4 h-4 text-purple-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+        <svg *ngIf="!isAdmin() && availableTokens()! > 0" class="w-4 h-4 text-cuda mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+        <svg *ngIf="!isAdmin() && availableTokens() === 0" class="w-4 h-4 text-warning mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        
+        <span class="text-xs font-medium text-slate-500">
+          {{ isAdmin() ? 'Acceso:' : 'Tokens:' }}
+          <span class="font-bold ml-0.5" 
+                [ngClass]="isAdmin() ? 'text-purple-400' : (availableTokens()! > 0 ? 'text-white' : 'text-warning')">
+            {{ isAdmin() ? '∞' : availableTokens() }}
+          </span>
+        </span>
+
+        <div class="h-3 w-px bg-surfaceBorder mx-3"></div>
+
+        <span class="text-[10px] uppercase tracking-wider font-bold" 
+              [ngClass]="isAdmin() ? 'text-purple-400' : (availableTokens()! > 0 ? 'text-cuda' : 'text-warning')">
+          {{ isAdmin() ? 'Prioridad Absoluta' : (availableTokens()! > 0 ? 'Alta Prioridad' : 'Cola Estándar') }}
+        </span>
+      </div>
+
+      <button 
+        *ngIf="isExecuting()"
+        (click)="cancelExecution()"
+        class="flex items-center gap-2 bg-danger/10 text-danger hover:bg-danger hover:text-white px-4 py-1.5 rounded-md transition-colors text-sm font-bold border border-danger/20 hover:border-danger shadow-[0_0_10px_rgba(239,68,68,0.2)]">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd" />
+        </svg>
+        Abortar
+      </button>
+
+      <button 
+        *ngIf="!isExecuting()"
+        (click)="executeCode()"
+        class="flex items-center gap-2 bg-cuda/10 text-cuda hover:bg-cuda hover:text-white px-4 py-1.5 rounded-md transition-all text-sm font-bold border border-cuda/20 hover:border-cuda shadow-[0_0_15px_rgba(118,185,0,0.15)] hover:shadow-[0_0_20px_rgba(118,185,0,0.4)]">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+        </svg>
+        Ejecutar CUDA
+      </button>
+    </div>
+  </div>
+
+  <div class="flex flex-col flex-1 overflow-hidden">
+    
+    <div [style.height.px]="editorHeight()" 
+         style="min-height: 100px; max-height: calc(100% - 60px);"
+         class="bg-dark relative group flex-shrink-0">
+      
+      <div *ngIf="isExecuting()" class="absolute inset-0 bg-dark/50 backdrop-blur-sm z-10 flex items-center justify-center">
+        <div class="text-center">
+          <div class="w-12 h-12 border-4 border-cuda border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p class="text-cuda font-medium animate-pulse">Procesando en GPU...</p>
+        </div>
+      </div>
+
+      <textarea 
+        [(ngModel)]="code"
+        spellcheck="false"
+        class="w-full h-full bg-transparent text-slate-300 p-4 font-mono text-[14px] leading-relaxed resize-none focus:outline-none custom-scrollbar"
+        placeholder="// Escribe tu código aquí..."></textarea>
+    </div>
+
+    <div 
+      (mousedown)="startResizing($event)"
+      class="h-1.5 bg-surfaceBorder hover:bg-cuda cursor-row-resize transition-colors flex items-center justify-center group relative z-20">
+      <div class="w-8 h-1 bg-slate-600 rounded-full group-hover:bg-white transition-colors"></div>
+    </div>
+
+    <div class="flex-1 bg-[#050505] flex flex-col font-mono text-xs shadow-inner overflow-hidden">
+      
+      <!-- BARRA SUPERIOR DE LA TERMINAL -->
+      <div class="bg-darker/90 text-slate-500 px-4 py-1.5 flex justify-between items-center text-[10px] uppercase tracking-widest border-b border-surfaceBorder/50 flex-shrink-0 min-h-[36px]">
+        
+        <div class="flex items-center gap-3">
+          <span>Terminal de Salida</span>
+          <span *ngIf="isExecuting()" class="text-cuda animate-pulse font-bold flex items-center gap-1.5">
+            <div class="w-1.5 h-1.5 rounded-full bg-cuda"></div>
+            Live
+          </span>
+        </div>
+
+        <!-- 🚀 BOTÓN ANTI-SPAM: Recuperar Ejecución -->
+        <button 
+          (click)="recoverLastExecution()" 
+          [disabled]="isExecuting() || isRecovering() || recoveryCooldown() > 0"
+          class="flex items-center gap-1.5 px-2.5 py-1 rounded transition-all border border-transparent disabled:opacity-50 disabled:cursor-not-allowed group"
+          [ngClass]="recoveryCooldown() > 0 ? 'text-warning bg-warning/10 border-warning/30' : 'text-slate-400 hover:text-white hover:bg-white/10 hover:border-surfaceBorder/50'">
+          
+          <!-- Icono (Desaparece si está cargando) -->
+          <svg *ngIf="!isRecovering()" 
+               class="w-3.5 h-3.5 transition-transform duration-300"
+               [ngClass]="{'group-hover:-rotate-45': recoveryCooldown() === 0}" 
+               fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          
+          <!-- Spinner -->
+          <div *ngIf="isRecovering()" class="w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
+          
+          <!-- Texto Dinámico -->
+          <span class="font-semibold tracking-wider text-[9px] mt-[1px]">
+            <ng-container *ngIf="recoveryCooldown() === 0">Restaurar Última Ejecución</ng-container>
+            <ng-container *ngIf="recoveryCooldown() > 0">Espera {{ recoveryCooldown() }}s</ng-container>
+          </span>
+        </button>
+
+      </div>
+      
+      <div #consoleContainer class="flex-1 p-3 overflow-auto custom-scrollbar space-y-1 console-body">
+        <div *ngIf="consoleOutput().length === 0" class="text-slate-600 italic">
+          Esperando ejecución...
+        </div>
+        
+        <div *ngFor="let line of consoleOutput()" class="flex gap-3 leading-relaxed break-all">
+          <span class="text-slate-600 select-none flex-shrink-0">[{{ line.timestamp | date:'HH:mm:ss' }}]</span>
+          
+          <pre class="m-0 font-mono text-xs whitespace-pre-wrap break-words w-full" 
+               [ngClass]="{
+                 'text-blue-400': line.type === 'info',
+                 'text-cuda': line.type === 'success',
+                 'text-danger': line.type === 'error' || line.type === 'stderr',
+                 'text-warning': line.type === 'warning',
+                 'text-slate-300': line.type === 'stdout'
+               }">{{ line.text }}</pre>
+        </div>
+      </div>
+    </div>
+
+  </div> 
+</div>

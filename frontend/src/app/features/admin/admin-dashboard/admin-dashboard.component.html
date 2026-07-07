@@ -1,0 +1,581 @@
+<div class="flex h-screen bg-background text-white overflow-hidden">
+  <app-sidenav class="h-full flex-shrink-0"></app-sidenav>
+  
+  <div class="flex-1 flex flex-col min-w-0">
+    <app-header class="flex-shrink-0"></app-header>
+
+    <main class="flex-1 p-6 lg:p-10 overflow-y-auto custom-scrollbar relative">
+      
+      <div *ngIf="isLoading()" class="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <div class="w-10 h-10 border-4 border-cuda border-t-transparent rounded-full animate-spin"></div>
+      </div>
+
+      <ng-container *ngIf="!isLoading() && metrics() as data">
+        <div class="max-w-[1400px] mx-auto h-full animate-fade-in">
+          
+          <div class="mb-8 flex justify-between items-end">
+            <div>
+              <h2 class="text-3xl font-bold text-white mb-1">Panel de Control</h2>
+              <p class="text-slate-400 text-sm">Monitorización de la cola de procesamiento, configuración global y métricas.</p>
+            </div>
+            <button (click)="loadMetrics()" class="p-2 text-slate-400 hover:text-cuda bg-surface border border-surfaceBorder rounded-lg transition-colors shadow-sm">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            </button>
+          </div>
+
+          <div class="bg-surface rounded-xl border-l-4 p-6 shadow-lg mb-8 transition-colors duration-500"
+               [ngClass]="queueStatus() === 'paused' ? 'border-warning bg-warning/5' : 'border-danger'">
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              
+              <div>
+                <h3 class="text-lg font-bold flex items-center flex-wrap gap-2" [ngClass]="queueStatus() === 'paused' ? 'text-warning' : 'text-danger'">
+                  <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  Controles de Emergencia
+                  
+                  <span *ngIf="queueStatus() === 'paused'" class="ml-2 px-2.5 py-0.5 bg-warning/20 border border-warning/50 text-warning text-[10px] uppercase tracking-widest rounded-full animate-pulse flex items-center gap-1.5 shadow-sm">
+                    <div class="w-1.5 h-1.5 rounded-full bg-warning"></div>
+                    Cola Pausada
+                  </span>
+
+                  <span *ngIf="!isRegistrationEnabled()" class="ml-1 px-2.5 py-0.5 bg-slate-500/20 border border-slate-500/50 text-slate-300 text-[10px] uppercase tracking-widest rounded-full flex items-center gap-1.5 shadow-sm">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    Registros Cerrados
+                  </span>
+                </h3>
+                <p class="text-sm text-slate-400 mt-1">Usa estos controles solo si el servidor está sobrecargado o detectas usos maliciosos.</p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3">
+                
+                <ng-container *ngIf="queueStatus() === 'running'">
+                  <div class="relative group">
+                    <button (click)="pauseQueue()" [disabled]="isActionLoading()" 
+                            class="px-4 py-2 bg-warning/10 text-warning border border-warning/30 hover:bg-warning hover:text-white rounded-lg font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm w-full sm:w-auto justify-center">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      Pausar Cola
+                    </button>
+                    <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none text-left">
+                      <div class="bg-slate-800 border border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                        <p class="text-[11px] text-slate-200 leading-relaxed font-normal normal-case m-0">
+                          <strong class="text-warning block mb-1">Congelar GPU:</strong> Detiene el procesamiento temporalmente. Las tareas se acumularán de forma segura en la cola de espera ("Pending").
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <ng-container *ngIf="queueStatus() === 'paused'">
+                  <div class="relative group">
+                    <button (click)="resumeQueue()" [disabled]="isActionLoading()" 
+                            class="px-4 py-2 bg-cuda/10 text-cuda border border-cuda/30 hover:bg-cuda hover:text-white rounded-lg font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(118,185,0,0.15)] hover:shadow-[0_0_20px_rgba(118,185,0,0.4)] w-full sm:w-auto justify-center">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      Reanudar Cola
+                    </button>
+                    <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none text-left">
+                      <div class="bg-slate-800 border border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                        <p class="text-[11px] text-slate-200 leading-relaxed font-normal normal-case m-0">
+                          <strong class="text-cuda block mb-1">Activar Motor:</strong> Vuelve a encender la GPU. Las tareas acumuladas comenzarán a procesarse inmediatamente según su orden y tokens.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <div class="relative group">
+                  <button (click)="clearQueue()" [disabled]="isActionLoading()" 
+                          class="px-4 py-2 bg-danger/10 text-danger border border-danger/30 hover:bg-danger hover:text-white rounded-lg font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm w-full sm:w-auto justify-center">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    Vaciar Cola
+                  </button>
+                  <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none text-left">
+                    <div class="bg-slate-800 border border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                      <p class="text-[11px] text-slate-200 leading-relaxed font-normal normal-case m-0">
+                        <strong class="text-danger block mb-1">Eliminación Total:</strong> Cancela y elimina todas las tareas en espera o procesándose. Devuelve los tokens a los alumnos afectados automáticamente.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="h-8 w-px bg-surfaceBorder/50 mx-2 hidden md:block"></div> 
+                
+                <div class="relative group">
+                  <button (click)="toggleRegistration()" [disabled]="isActionLoading()" 
+                        class="px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 border w-full sm:w-auto justify-center"
+                        [ngClass]="isRegistrationEnabled() ? 'bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500 hover:text-white shadow-sm' : 'bg-surfaceBorder/30 text-slate-300 border-surfaceBorder hover:bg-white hover:text-darker shadow-sm'">
+                    <svg *ngIf="isRegistrationEnabled()" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>
+                    <svg *ngIf="!isRegistrationEnabled()" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    {{ isRegistrationEnabled() ? 'Cerrar Registros' : 'Abrir Registros' }}
+                  </button>
+                  <div class="absolute top-full right-0 md:left-1/2 md:-translate-x-1/2 mt-2 w-64 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none text-left">
+                    <div class="bg-slate-800 border border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                      <p class="text-[11px] text-slate-200 leading-relaxed font-normal normal-case m-0">
+                        <strong class="text-white block mb-1">Control de Acceso:</strong> Habilita o deshabilita la creación de nuevas cuentas de alumnos desde la pantalla de registro.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div *ngIf="actionMessage()" class="mt-4 p-3 rounded-lg text-sm font-medium animate-fade-in"
+                 [ngClass]="actionMessage()!.type === 'success' ? 'bg-cuda/10 text-cuda border border-cuda/20' : 'bg-danger/10 text-danger border border-danger/20'">
+              {{ actionMessage()!.text }}
+            </div>
+          </div>
+
+          <div class="bg-surface rounded-xl border-l-4 border-purple-500 p-6 shadow-lg mb-8 transition-colors duration-500">
+            
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div>
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                  <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Configuración del Motor GPU
+                </h3>
+                <p class="text-sm text-slate-400 mt-1">Define el tiempo máximo de ejecución por tarea para evitar bucles infinitos.</p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3">
+                <div class="flex shadow-inner group">
+                  <input type="number" [(ngModel)]="executionTimeoutSeconds" min="1" max="300"
+                         class="w-20 bg-[#050505] border border-surfaceBorder text-white text-center rounded-l-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 py-2 px-1 outline-none font-mono transition-colors z-10">
+                  <div class="flex items-center justify-center w-16 bg-surfaceBorder/20 border border-l-0 border-surfaceBorder rounded-r-lg text-slate-400 text-xs font-bold uppercase tracking-wider">
+                    Segs
+                  </div>
+                </div>
+
+                <button (click)="saveExecutionTimeout()" [disabled]="isSavingTimeout()" 
+                        class="px-5 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-sm w-[110px] disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span *ngIf="!isSavingTimeout()">Aplicar</span>
+                  <div *ngIf="isSavingTimeout()" class="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="timeoutMessage()" class="mt-4 p-3 rounded-lg text-sm font-medium animate-fade-in flex items-center gap-2"
+                 [ngClass]="timeoutMessage()!.type === 'success' ? 'bg-cuda/10 text-cuda border border-cuda/20' : 'bg-danger/10 text-danger border border-danger/20'">
+              <svg *ngIf="timeoutMessage()!.type === 'success'" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+              {{ timeoutMessage()!.text }}
+            </div>
+
+
+            <div class="h-px w-full bg-surfaceBorder/50 my-6"></div>
+
+
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div>
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                  <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                  </svg>
+                  Políticas de Almacenamiento
+                </h3>
+                <p class="text-sm text-slate-400 mt-1">Límite máximo de espacio en disco que cada alumno puede ocupar con sus archivos.</p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3">
+                <div class="flex shadow-inner group">
+                  <input type="number" [(ngModel)]="storageQuotaMB" min="1" max="5000"
+                         class="w-20 bg-[#050505] border border-surfaceBorder text-white text-center rounded-l-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 py-2 px-1 outline-none font-mono transition-colors z-10">
+                  <div class="flex items-center justify-center w-16 bg-surfaceBorder/20 border border-l-0 border-surfaceBorder rounded-r-lg text-slate-400 text-xs font-bold uppercase tracking-wider">
+                    MB
+                  </div>
+                </div>
+
+                <button (click)="saveStorageQuota()" [disabled]="isSavingStorage()" 
+                        class="px-5 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-sm w-[110px] disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span *ngIf="!isSavingStorage()">Aplicar</span>
+                  <div *ngIf="isSavingStorage()" class="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                </button>
+              </div>
+            </div>
+
+            
+
+            <div *ngIf="storageMessage()" class="mt-4 p-3 rounded-lg text-sm font-medium animate-fade-in flex items-center gap-2"
+                 [ngClass]="storageMessage()!.type === 'success' ? 'bg-cuda/10 text-cuda border border-cuda/20' : 'bg-danger/10 text-danger border border-danger/20'">
+              <svg *ngIf="storageMessage()!.type === 'success'" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+              {{ storageMessage()!.text }}
+            </div>
+
+
+            <div class="h-px w-full bg-surfaceBorder/50 my-6"></div>
+
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div>
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                  <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  Concurrencia del Clúster
+                </h3>
+                <p class="text-sm text-slate-400 mt-1">Número máximo de tareas que la GPU procesará simultáneamente en paralelo.</p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3">
+                <div class="flex shadow-inner group">
+                  <input type="number" [(ngModel)]="workerConcurrency" min="1" max="20"
+                         class="w-20 bg-[#050505] border border-surfaceBorder text-white text-center rounded-l-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 py-2 px-1 outline-none font-mono transition-colors z-10">
+                  <div class="flex items-center justify-center w-16 bg-surfaceBorder/20 border border-l-0 border-surfaceBorder rounded-r-lg text-slate-400 text-xs font-bold uppercase tracking-wider">
+                    Hilos
+                  </div>
+                </div>
+
+                <button (click)="saveWorkerConcurrency()" [disabled]="isSavingConcurrency()" 
+                        class="px-5 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-sm w-[110px] disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span *ngIf="!isSavingConcurrency()">Aplicar</span>
+                  <div *ngIf="isSavingConcurrency()" class="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="concurrencyMessage()" class="mt-4 p-3 rounded-lg text-sm font-medium animate-fade-in flex items-center gap-2"
+                 [ngClass]="concurrencyMessage()!.type === 'success' ? 'bg-cuda/10 text-cuda border border-cuda/20' : 'bg-danger/10 text-danger border border-danger/20'">
+              <svg *ngIf="concurrencyMessage()!.type === 'success'" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+              {{ concurrencyMessage()!.text }}
+            </div>
+
+            <!-- DIVISOR -->
+            <div class="h-px w-full bg-surfaceBorder/50 my-6"></div>
+
+            <!-- ========================================== -->
+            <!-- SECCIÓN EXTRA: CADUCIDAD DE SESIÓN (JWT)   -->
+            <!-- ========================================== -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div>
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                  <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Duración de la Sesión
+                </h3>
+                <p class="text-sm text-slate-400 mt-1">Tiempo en horas antes de que la plataforma expulse al usuario y le pida iniciar sesión de nuevo.</p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3">
+                <div class="flex shadow-inner group">
+                  <input type="number" [(ngModel)]="sessionExpirationHours" min="1" max="720"
+                         class="w-20 bg-[#050505] border border-surfaceBorder text-white text-center rounded-l-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 py-2 px-1 outline-none font-mono transition-colors z-10">
+                  <div class="flex items-center justify-center w-16 bg-surfaceBorder/20 border border-l-0 border-surfaceBorder rounded-r-lg text-slate-400 text-xs font-bold uppercase tracking-wider">
+                    Horas
+                  </div>
+                </div>
+
+                <button (click)="saveSessionExpiration()" [disabled]="isSavingSession()" 
+                        class="px-5 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-sm w-[110px] disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span *ngIf="!isSavingSession()">Aplicar</span>
+                  <div *ngIf="isSavingSession()" class="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="sessionMessage()" class="mt-4 p-3 rounded-lg text-sm font-medium animate-fade-in flex items-center gap-2"
+                 [ngClass]="sessionMessage()!.type === 'success' ? 'bg-cuda/10 text-cuda border border-cuda/20' : 'bg-danger/10 text-danger border border-danger/20'">
+              <svg *ngIf="sessionMessage()!.type === 'success'" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+              {{ sessionMessage()!.text }}
+            </div>
+
+            <!-- DIVISOR ELEGANTE -->
+            <div class="h-px w-full bg-surfaceBorder/50 my-6"></div>
+
+            <!-- ========================================== -->
+            <!-- SECCIÓN 4: RENOVACIÓN AUTOMÁTICA DE TOKENS -->
+            <!-- ========================================== -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div>
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                  <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Renovación Automática de Tokens
+                </h3>
+                <p class="text-sm text-slate-400 mt-1">Programa la hora exacta y la cantidad de saldo que recibirá cada alumno diariamente.</p>
+              </div>
+
+              <!-- 🚀 Controles Dobles: Hora y Tokens -->
+              <div class="flex flex-wrap items-center gap-3">
+                
+                <!-- Selector de Hora -->
+                <div class="flex shadow-inner group cursor-pointer">
+                  <input type="time" [(ngModel)]="tokenResetTime"
+                         class="w-[100px] bg-[#050505] border border-surfaceBorder text-white text-center rounded-l-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 py-2 px-1 outline-none font-mono transition-colors z-10 cursor-pointer">
+                  <div class="flex items-center justify-center w-16 bg-surfaceBorder/20 border border-l-0 border-surfaceBorder rounded-r-lg text-slate-400 text-xs font-bold uppercase tracking-wider">
+                    Hora
+                  </div>
+                </div>
+
+                <!-- Selector de Cantidad -->
+                <div class="flex shadow-inner group">
+                  <input type="number" [(ngModel)]="tokenResetAmount" min="0" max="1000"
+                         class="w-20 bg-[#050505] border border-surfaceBorder text-white text-center rounded-l-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 py-2 px-1 outline-none font-mono transition-colors z-10">
+                  <div class="flex items-center justify-center w-16 bg-surfaceBorder/20 border border-l-0 border-surfaceBorder rounded-r-lg text-slate-400 text-xs font-bold uppercase tracking-wider">
+                    Tokens
+                  </div>
+                </div>
+
+                <!-- Botón Aplicar -->
+                <button (click)="saveTokenReset()" [disabled]="isSavingTokenReset()" 
+                        class="px-5 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/30 hover:bg-purple-500 hover:text-white rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-sm w-[110px] disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span *ngIf="!isSavingTokenReset()">Aplicar</span>
+                  <div *ngIf="isSavingTokenReset()" class="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Mensaje de Feedback -->
+            <div *ngIf="tokenResetMessage()" class="mt-4 p-3 rounded-lg text-sm font-medium animate-fade-in flex items-center gap-2"
+                 [ngClass]="tokenResetMessage()!.type === 'success' ? 'bg-cuda/10 text-cuda border border-cuda/20' : 'bg-danger/10 text-danger border border-danger/20'">
+              <svg *ngIf="tokenResetMessage()!.type === 'success'" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+              {{ tokenResetMessage()!.text }}
+            </div>
+
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            
+            <div class="bg-surface rounded-xl border border-surfaceBorder p-6 shadow-lg relative">
+              <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center gap-2">
+                  <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Alumnos Registrados</p>
+                  
+                  <div class="relative group">
+                    <svg class="w-3.5 h-3.5 text-slate-500 hover:text-cuda transition-colors cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none text-left">
+                      <div class="bg-slate-800 border border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                        <p class="text-[11px] text-slate-200 leading-relaxed font-normal normal-case m-0">
+                          <strong class="text-blue-400 block mb-1">Censo de Usuarios:</strong> Recuento total de cuentas de estudiantes registradas, incluyendo tanto las activas como las suspendidas temporalmente.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-2 bg-blue-500/10 rounded-lg">
+                  <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                </div>
+              </div>
+              <p class="text-4xl font-black text-white">{{ data.overview.totalUsers }}</p>
+            </div>
+
+            <div class="bg-surface rounded-xl border border-surfaceBorder p-6 shadow-lg relative">
+              <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center gap-2">
+                  <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Archivos en Disco</p>
+                  
+                  <div class="relative group">
+                    <svg class="w-3.5 h-3.5 text-slate-500 hover:text-cuda transition-colors cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none text-left">
+                      <div class="bg-slate-800 border border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                        <p class="text-[11px] text-slate-200 leading-relaxed font-normal normal-case m-0">
+                          <strong class="text-purple-400 block mb-1">Estado del Almacenamiento:</strong> Cantidad total de archivos que los alumnos mantienen actualmente en el servidor físico.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                  <div class="relative group/btn">
+                    <button (click)="cleanupFiles()" [disabled]="isActionLoading()" 
+                            class="p-2 bg-danger/10 hover:bg-danger text-danger hover:text-white rounded-lg transition-colors disabled:opacity-50 border border-transparent shadow-sm">
+                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                    <div class="absolute bottom-full right-0 mb-2 w-64 z-[110] opacity-0 invisible group-hover/btn:opacity-100 group-hover/btn:visible transition-all duration-300 pointer-events-none text-left">
+                      <div class="bg-slate-800 border border-danger/40 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                        <p class="text-[11px] text-slate-200 leading-relaxed font-normal normal-case m-0">
+                          <strong class="text-danger block mb-1">Mantenimiento Crítico:</strong> Elimina permanentemente todos los archivos de los alumnos. <span class="text-cuda">Los Recursos Globales se conservan intactos.</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="p-2 bg-purple-500/10 rounded-lg">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                  </div>
+                </div>
+              </div>
+              <p class="text-4xl font-black text-white">{{ data.overview.totalFiles }}</p>
+            </div>
+
+            <div class="bg-surface rounded-xl border border-surfaceBorder p-6 shadow-lg relative">
+              <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center gap-2">
+                  <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Peticiones Totales</p>
+                  
+                  <div class="relative group">
+                    <svg class="w-3.5 h-3.5 text-slate-500 hover:text-cuda transition-colors cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none text-left">
+                      <div class="bg-slate-800 border border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                        <p class="text-[11px] text-slate-200 leading-relaxed font-normal normal-case m-0">
+                          <strong class="text-cuda block mb-1">Actividad Histórica:</strong> Registro acumulado de todas las ejecuciones de código CUDA enviadas al clúster por todos los usuarios.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-2 bg-cuda/10 rounded-lg">
+                  <svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                </div>
+              </div>
+              <p class="text-4xl font-black text-white">{{ data.overview.totalTasks }}</p>
+            </div>
+
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-1 bg-surface rounded-xl border border-surfaceBorder p-6 shadow-lg">
+              
+              <div class="flex items-center gap-2 mb-6">
+                <h3 class="text-white font-bold">Estado de Ejecuciones</h3>
+                
+                <div class="relative group">
+                  <svg class="w-4 h-4 text-slate-500 hover:text-cuda transition-colors cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div class="absolute bottom-full left-0 mb-3 w-64 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none text-left">
+                    <div class="bg-slate-800 border border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                      <p class="text-[11px] text-slate-200 leading-relaxed font-normal normal-case m-0">
+                        <strong class="text-white block mb-1">Monitor en Tiempo Real:</strong> Distribución de las tareas enviadas al clúster según su fase en el ciclo de vida del compilador de CUDA.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="space-y-4">
+                <div class="flex justify-between items-center p-3 bg-darker rounded-lg border border-surfaceBorder">
+                  <span class="text-sm font-medium text-slate-300">En Cola (Pending)</span>
+                  <span class="text-lg font-bold text-white">{{ data.tasksByStatus.pending || 0 }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <span class="text-sm font-medium text-blue-400">Procesando</span>
+                  <span class="text-lg font-bold text-blue-400">{{ data.tasksByStatus.processing || 0 }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-cuda/10 border border-cuda/20 rounded-lg">
+                  <span class="text-sm font-medium text-cuda">Completadas</span>
+                  <span class="text-lg font-bold text-cuda">{{ data.tasksByStatus.completed || 0 }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-danger/10 border border-danger/20 rounded-lg">
+                  <span class="text-sm font-medium text-danger">Fallidas</span>
+                  <span class="text-lg font-bold text-danger">{{ data.tasksByStatus.failed || 0 }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-warning/10 border border-warning/20 rounded-lg">
+                  <span class="text-sm font-medium text-warning">Abortadas</span>
+                  <span class="text-lg font-bold text-warning">{{ data.tasksByStatus.cancelled || 0 }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="lg:col-span-2 bg-surface rounded-xl border border-surfaceBorder p-6 shadow-lg flex flex-col h-full">
+              
+              <div class="flex items-center gap-2 mb-6 flex-shrink-0">
+                <h3 class="text-white font-bold">Actividad Reciente (Últimas 100)</h3>
+                
+                <div class="relative group">
+                  <svg class="w-4 h-4 text-slate-500 hover:text-cuda transition-colors cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div class="absolute bottom-full right-0 md:left-1/2 md:-translate-x-1/2 mb-3 w-72 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none text-left">
+                    <div class="bg-slate-800 border border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                      <p class="text-[11px] text-slate-200 leading-relaxed font-normal normal-case m-0">
+                        <strong class="text-white block mb-1">Registro de Auditoría:</strong> Historial detallado de las ejecuciones más recientes. Permite supervisar la carga e identificar a usuarios que puedan estar saturando el clúster con bucles.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar max-h-[350px] border border-surfaceBorder/50 rounded-lg bg-darker/30">
+                <table class="w-full text-left text-sm text-slate-300 relative">
+                  
+                  <thead class="text-xs uppercase bg-darker text-slate-500 font-bold sticky top-0 z-10 shadow-sm outline outline-1 outline-surfaceBorder/50">
+                    <tr>
+                      <th class="px-4 py-3">ID Tarea</th>
+                      <th class="px-4 py-3">Alumno</th>
+                      <th class="px-4 py-3">Estado</th>
+                      <th class="px-4 py-3 text-right">Fecha/Hora</th>
+                      <th class="px-4 py-3 text-center">Auditoría</th>
+                    </tr>
+                  </thead>
+                  
+                  <tbody class="divide-y divide-surfaceBorder/50">
+                    <tr *ngIf="data.recentActivity.length === 0">
+                      <td colspan="4" class="px-4 py-8 text-center text-slate-500 italic">No hay actividad reciente en el clúster.</td>
+                    </tr>
+                    <tr *ngFor="let task of data.recentActivity" class="hover:bg-white/5 transition-colors">
+                      <td class="px-4 py-4 font-mono text-xs">#{{ task.id }}</td>
+                      <td class="px-4 py-4 font-medium text-white truncate max-w-[150px]" title="{{ task.name }}">{{ task.name }}</td>
+                      <td class="px-4 py-4">
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border" [ngClass]="getStatusColor(task.status)">
+                          {{ task.status }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-4 text-right text-slate-400 text-xs whitespace-nowrap">
+                        {{ task.created_at | date:'dd/MM/yyyy, HH:mm' }}
+                      </td>
+                      <td class="px-4 py-4 text-center">
+                        <button (click)="openCodeModal(task.id)" class="p-1.5 bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white rounded-md transition-colors shadow-sm" title="Inspeccionar Código">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </ng-container>
+      
+    </main>
+  </div>
+  <div *ngIf="isCodeModalOpen()" class="fixed inset-0 z-[200] flex items-center justify-center bg-background/90 backdrop-blur-sm animate-fade-in p-4 md:p-10">
+  
+  <div class="bg-surface border border-surfaceBorder rounded-xl shadow-2xl w-full max-w-4xl max-h-full flex flex-col overflow-hidden relative">
+    
+    <div class="bg-darker px-6 py-4 flex justify-between items-center border-b border-surfaceBorder/50 flex-shrink-0">
+      <div>
+        <h3 class="text-white font-bold text-lg flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          </svg>
+          Auditoría de Código (Tarea #{{ selectedTaskId() }})
+        </h3>
+      </div>
+      
+      <button (click)="closeCodeModal()" class="text-slate-400 hover:text-white bg-surfaceBorder/30 hover:bg-danger/20 hover:border-danger/50 p-2 rounded-lg border border-transparent transition-all">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-auto bg-[#050505] p-6 relative custom-scrollbar">
+      
+      <div *ngIf="isCodeLoading()" class="absolute inset-0 flex flex-col items-center justify-center bg-[#050505]/80 z-10">
+        <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p class="text-blue-400 text-sm font-bold">Descargando código seguro...</p>
+      </div>
+
+      <pre *ngIf="!isCodeLoading() && selectedTaskCode()" class="text-sm font-mono text-slate-300 whitespace-pre overflow-visible"><code>{{ selectedTaskCode() }}</code></pre>
+      
+    </div>
+
+  </div>
+</div>
+</div>

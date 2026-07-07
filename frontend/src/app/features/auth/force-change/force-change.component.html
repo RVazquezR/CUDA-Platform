@@ -1,0 +1,87 @@
+<div class="min-h-screen flex items-center justify-center bg-background p-4">
+  
+  <div class="max-w-md w-full bg-surface border border-warning/30 rounded-2xl shadow-2xl p-8 animate-fade-in">
+    
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 bg-warning/10 text-warning rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h2 class="text-2xl font-bold text-white mb-2">Contraseña Temporal Detectada</h2>
+      <p class="text-slate-400 text-sm leading-relaxed">
+        Por motivos de seguridad, debes sustituir la contraseña proporcionada por el administrador por una contraseña segura y definitiva.
+      </p>
+    </div>
+
+    <div *ngIf="error()" class="bg-danger/10 border border-danger/50 text-danger text-xs p-3 rounded-lg mb-6 text-center animate-fade-in">
+      {{ error() }}
+    </div>
+
+    <form [formGroup]="changeForm" (ngSubmit)="onSubmit()" class="space-y-5">
+      
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Nueva Contraseña</label>
+        <div class="relative">
+          <input 
+            [type]="showPassword() ? 'text' : 'password'" 
+            formControlName="password"
+            placeholder="Mínimo 8 caracteres"
+            class="w-full bg-background border border-surfaceBorder rounded-lg pl-4 pr-12 py-3 text-white focus:outline-none focus:ring-2 focus:ring-warning/40 transition-all font-mono"
+            [class.border-danger]="changeForm.get('password')?.invalid && changeForm.get('password')?.touched"
+          >
+          <button type="button" (click)="showPassword.set(!showPassword())" tabindex="-1"
+                  class="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-600 hover:text-warning transition-colors outline-none">
+            <svg *ngIf="!showPassword()" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+            <svg *ngIf="showPassword()" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+          </button>
+        </div>
+        <p *ngIf="changeForm.get('password')?.hasError('pattern') && changeForm.get('password')?.touched" class="text-danger text-[11px] mt-1.5 leading-tight">
+          Debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un símbolo especial.
+        </p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Confirmar Contraseña</label>
+        <div class="relative">
+          <input 
+            [type]="showConfirmPassword() ? 'text' : 'password'" 
+            formControlName="confirmPassword"
+            placeholder="Repite la contraseña"
+            class="w-full bg-background border border-surfaceBorder rounded-lg pl-4 pr-12 py-3 text-white focus:outline-none focus:ring-2 focus:ring-warning/40 transition-all font-mono"
+            [class.border-danger]="changeForm.get('confirmPassword')?.touched && changeForm.value.password !== changeForm.value.confirmPassword"
+          >
+          <button type="button" (click)="showConfirmPassword.set(!showConfirmPassword())" tabindex="-1"
+                  class="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-600 hover:text-warning transition-colors outline-none">
+            <svg *ngIf="!showConfirmPassword()" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+            <svg *ngIf="showConfirmPassword()" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+          </button>
+        </div>
+        <p *ngIf="changeForm.get('confirmPassword')?.touched && changeForm.value.password !== changeForm.value.confirmPassword" class="text-danger text-[11px] mt-1.5 leading-tight">
+          Las contraseñas no coinciden.
+        </p>
+      </div>
+
+      <div class="pt-2">
+        <button 
+          type="submit" 
+          [disabled]="isLoading() || changeForm.invalid"
+          class="w-full bg-warning hover:bg-yellow-500 text-[#09090b] font-bold py-4 rounded-xl transition-all duration-300 flex justify-center items-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span *ngIf="!isLoading()" class="flex items-center gap-2">
+            Actualizar Contraseña
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+          </span>
+          <div *ngIf="isLoading()" class="flex items-center gap-3">
+            <svg class="animate-spin h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Validando ...
+          </div>
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>

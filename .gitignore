@@ -1,0 +1,19 @@
+# Archivos de entorno (SECRETOS)
+.env
+
+# Dependencias (Se reinstalan con 'npm install')
+node_modules/
+
+# Carpetas de compilación
+dist/
+.angular/
+
+# Logs y temporales
+logs/
+temp_workspaces/
+storage/
+
+# Otros
+.vscode/
+.DS_Store
+~$*

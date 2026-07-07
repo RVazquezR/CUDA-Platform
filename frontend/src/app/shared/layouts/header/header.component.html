@@ -1,0 +1,22 @@
+<header class="h-16 bg-surface border-b border-surfaceBorder flex items-center justify-between px-8">
+  <div class="flex items-center gap-4">
+    <div class="h-3 w-3 rounded-full bg-cuda animate-pulse shadow-[0_0_10px_#76B900]"></div>
+    
+    <span class="text-white font-bold tracking-wider text-sm uppercase"> 
+      CUDA ENGINE v1.0
+    </span>
+  </div>
+
+  <div class="flex items-center gap-6">
+    <div class="text-right hidden sm:block">
+      <p class="text-white text-sm font-medium">{{ authService.currentUser()?.name }}</p>
+      <p class="text-cuda text-[10px] uppercase tracking-widest">{{ authService.currentUser()?.role }}</p>
+    </div>
+    
+    <button (click)="logout()" class="p-2 text-slate-400 hover:text-danger transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+      </svg>
+    </button>
+  </div>
+</header>

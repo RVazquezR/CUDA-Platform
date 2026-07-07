@@ -1,0 +1,430 @@
+<div class="flex h-screen bg-background text-white overflow-hidden relative">
+  <app-sidenav class="h-full flex-shrink-0"></app-sidenav>
+  <div class="flex-1 flex flex-col min-w-0">
+    <app-header class="flex-shrink-0"></app-header>
+
+    <main class="flex-1 p-6 lg:p-10 overflow-y-auto custom-scrollbar relative">
+      
+      <div *ngIf="isLoading()" class="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <div class="w-10 h-10 border-4 border-cuda border-t-transparent rounded-full animate-spin"></div>
+      </div>
+
+      <div class="max-w-[1400px] mx-auto h-full" *ngIf="!isLoading()">
+        
+        <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h2 class="text-3xl font-bold text-white mb-1">Gestión de Usuarios</h2>
+            <p class="text-slate-400 text-sm">Gestiona tokens, perfil, accesos, recuperación de contraseñas y eliminación de los usuarios.</p>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            
+            <div class="relative group">
+              <button (click)="purgeAllStudents()" 
+                      class="w-full sm:w-auto flex items-center justify-center gap-2 bg-danger/10 hover:bg-danger text-danger hover:text-white border border-danger/30 hover:border-danger px-4 py-2.5 rounded-lg text-sm font-bold transition-all shadow-[0_0_15px_rgba(239,68,68,0.15)] hover:shadow-[0_0_20px_rgba(239,68,68,0.4)]">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                Reset de Curso
+              </button>
+              <div class="absolute top-full left-0 mt-2 w-72 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none text-left">
+                <div class="bg-slate-800 border border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                  <p class="text-[11px] text-slate-200 leading-relaxed font-normal normal-case">
+                    <strong class="text-danger block mb-1">Reset de Fin de Curso:</strong>
+                    Elimina físicamente a todos los usuarios con rol 'normal', sus archivos y su historial. Las cuentas de Administrador no se verán afectadas.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="relative w-full sm:w-80">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              </div>
+              <input type="text" [(ngModel)]="searchQuery" placeholder="Buscar por nombre, id o email..." 
+                     class="w-full bg-[#050505] border border-surfaceBorder text-slate-300 text-sm rounded-lg focus:ring-cuda focus:border-cuda block pl-10 pr-10 p-2.5 transition-colors outline-none shadow-inner">
+              <button *ngIf="searchQuery().length > 0" (click)="clearSearch()" 
+                      class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-white transition-colors cursor-pointer"
+                      title="Borrar búsqueda">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="actionMessage()" class="mb-6 p-4 rounded-lg text-sm font-medium animate-fade-in shadow-lg flex items-center gap-3"
+             [ngClass]="actionMessage()!.type === 'success' ? 'bg-cuda/10 text-cuda border border-cuda/20' : 'bg-danger/10 text-danger border border-danger/20'">
+          <svg *ngIf="actionMessage()!.type === 'success'" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <svg *ngIf="actionMessage()!.type === 'error'" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          {{ actionMessage()!.text }}
+        </div>
+
+
+
+        <details class="group bg-surface border border-surfaceBorder rounded-xl shadow-lg mb-6 overflow-hidden animate-fade-in" >
+          
+          <summary class="bg-darker/80 px-5 py-3 flex items-center justify-between cursor-pointer hover:bg-surfaceBorder/30 transition-colors list-none outline-none [&::marker]:hidden [&::-webkit-details-marker]:hidden">
+            <div class="flex items-center gap-2 pr-4">
+              <svg class="w-4 h-4 text-cuda flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] group-hover:text-white transition-colors">Guía de Seguridad</span>
+            </div>
+            <svg class="w-5 h-5 text-slate-500 flex-shrink-0 transform group-open:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+
+          <div class="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 border-t border-surfaceBorder bg-slate-800/20">
+            
+            <div class="flex items-start gap-3 lg:gap-4 p-4 bg-slate-500/5 border border-slate-500/20 rounded-xl hover:bg-slate-500/10 transition-colors shadow-sm">
+              <div class="p-2.5 bg-warning/10 rounded-lg border border-warning/20 flex-shrink-0 shadow-inner">
+                <svg class="w-4 h-4 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+              </div>
+              <div>
+                <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-1.5">Suspender Cuenta</h4>
+                <p class="text-xs text-slate-400 leading-relaxed m-0">
+                  Bloquea temporalmente el acceso del alumno a la plataforma. Conserva intactos sus archivos en disco, sus métricas y su saldo de tokens.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3 lg:gap-4 p-4 bg-slate-500/5 border border-slate-500/20 rounded-xl hover:bg-slate-500/10 transition-colors shadow-sm">
+              <div class="p-2.5 bg-danger/10 rounded-lg border border-danger/20 flex-shrink-0 shadow-inner">
+                <svg class="w-4 h-4 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </div>
+              <div>
+                <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-1.5">Eliminación Permanente</h4>
+                <p class="text-xs text-slate-400 leading-relaxed m-0">
+                  Borrado físico e irrecuperable del usuario. Destruye sus credenciales de acceso y todos sus archivos alojados en el servidor.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </details>
+
+
+        <details class="group bg-surface border border-surfaceBorder rounded-xl shadow-lg mb-6 overflow-hidden animate-fade-in">
+          
+          <summary class="bg-darker/80 px-5 py-3 flex items-center justify-between cursor-pointer hover:bg-surfaceBorder/30 transition-colors list-none outline-none [&::marker]:hidden [&::-webkit-details-marker]:hidden">
+            <div class="flex items-center gap-2 pr-4">
+              <svg class="w-4 h-4 text-cuda flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4v-4l5.659-5.659C9.092 9.89 9 9.462 9 9a6 6 0 019-3.257z" /></svg>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] group-hover:text-white transition-colors">Guía de Recuperación de Contraseña</span>
+            </div>
+            <svg class="w-5 h-5 text-slate-500 flex-shrink-0 transform group-open:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+
+          <div class="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 border-t border-surfaceBorder bg-slate-800/20">
+            
+            <div class="flex items-start gap-3 lg:gap-4 p-4 bg-slate-500/5 border border-slate-500/20 rounded-xl hover:bg-slate-500/10 transition-colors shadow-sm">
+              <div class="p-2 bg-danger/10 rounded-lg border border-danger/20 flex-shrink-0 shadow-inner">
+                <svg class="w-4 h-4 text-danger animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              </div>
+              <div>
+                <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-1.5">1. Detección de Solicitud</h4>
+                <p class="text-xs text-slate-400 leading-relaxed m-0">
+                  Si un alumno solicita ayuda desde el login, aparecerá la etiqueta <span class="px-1.5 py-0.5 bg-danger/20 text-danger text-[9px] uppercase font-bold rounded-full border border-danger/30">Solicitud Cambio Contraseña</span> parpadeante junto a su nombre en la tabla.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3 lg:gap-4 p-4 bg-slate-500/5 border border-slate-500/20 rounded-xl hover:bg-slate-500/10 transition-colors shadow-sm">
+              <div class="p-2 bg-danger/10 rounded-lg border border-danger/20 flex-shrink-0 shadow-inner">
+                <svg class="w-4 h-4 text-danger animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4v-4l5.659-5.659C9.092 9.89 9 9.462 9 9a6 6 0 019-3.257z" /></svg>
+              </div>
+              <div>
+                <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-1.5">2. Generación de Rescate</h4>
+                <p class="text-xs text-slate-400 leading-relaxed m-0">
+                  Haz clic en el botón de la <strong class="text-danger">Llave Roja</strong> en la columna de acciones. El sistema generará una clave temporal (ej: <code>CudaTemp#1234</code>) que debes entregar al alumno en clase o por correo.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3 lg:gap-4 p-4 bg-slate-500/5 border border-slate-500/20 rounded-xl hover:bg-slate-500/10 transition-colors shadow-sm md:col-span-2">
+              <div class="p-2.5 bg-cuda/10 rounded-lg border border-cuda/20 flex-shrink-0 shadow-inner">
+                <svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+              </div>
+              <div>
+                <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-1.5">3. Cambio Forzado Obligatorio</h4>
+                <p class="text-xs text-slate-400 leading-relaxed m-0">
+                  Una vez que el alumno introduzca la clave temporal, el sistema detectará el acceso y le impedirá navegar, redirigiéndole a una pantalla de <strong class="text-cuda">actualización obligatoria</strong> para establecer su nueva contraseña definitiva y personal.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </details>
+
+        
+
+        <div class="bg-surface rounded-xl border border-surfaceBorder shadow-xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-300">
+              <thead class="text-xs uppercase bg-darker text-slate-500 font-bold border-b border-surfaceBorder">
+                <tr>
+                  <th class="px-5 py-4">ID</th>
+                  <th class="px-5 py-4">Usuario</th>
+                  
+                  <th class="px-5 py-4">
+                    <div class="flex items-center gap-1.5 group relative cursor-help w-max">
+                      Rol
+                      <svg class="w-3.5 h-3.5 text-slate-500 group-hover:text-cuda transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <div class="absolute top-full left-0 mt-2 w-60 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none text-left">
+                        <div class="bg-slate-800 border border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                          <p class="text-[11px] text-slate-200 font-normal normal-case leading-relaxed">
+                            Define el nivel de privilegios.<br>
+                            <strong class="text-purple-400">Administrador:</strong> Control total de la plataforma.<br>
+                            <strong class="text-white">Estudiante:</strong> Sujeto a colas y límites de cuota.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </th>
+
+                  <th class="px-5 py-4">
+                    <div class="flex items-center gap-1.5 group relative cursor-help w-max">
+                      Estado
+                      <svg class="w-3.5 h-3.5 text-slate-500 group-hover:text-cuda transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <div class="absolute top-full left-0 mt-2 w-56 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none text-left">
+                        <div class="bg-slate-800 border border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                          <p class="text-[11px] text-slate-200 font-normal normal-case leading-relaxed">
+                            <strong class="text-cuda">Activo:</strong> Acceso permitido al clúster.<br>
+                            <strong class="text-warning">Suspendido:</strong> Inicio de sesión denegado, pero sus archivos y datos se conservan.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </th>
+
+                  <th class="px-5 py-4 text-center">
+                    <div class="flex items-center justify-center gap-1.5 group relative cursor-help w-full">
+                      Tokens
+                      <svg class="w-3.5 h-3.5 text-slate-500 group-hover:text-cuda transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none text-center">
+                        <div class="bg-slate-800 border border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                          <p class="text-[11px] text-slate-200 font-normal normal-case leading-relaxed">Los usuarios con rol <strong>Administrador</strong> poseen tokens infinitos (∞) por defecto.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </th>
+
+                  <th class="px-5 py-4 text-right">
+                    <div class="flex items-center justify-end gap-1.5 group relative cursor-help w-full">
+                      <svg class="w-3.5 h-3.5 text-slate-500 group-hover:text-cuda transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      Acciones
+                      <div class="absolute top-full right-0 mt-2 w-64 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none text-left">
+                        <div class="bg-slate-800 border border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.8)] rounded-lg p-3">
+                          <p class="text-[11px] text-slate-200 font-normal normal-case leading-relaxed">
+                            <strong class="text-white block mb-1">Panel de control individual:</strong>
+                            Modificar tokens, editar perfil, suspender cuenta, forzar reset de contraseña o eliminar alumno.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </th>
+                  
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-surfaceBorder/50">
+                
+                <tr *ngIf="filteredUsers().length === 0">
+                  <td colspan="6" class="px-5 py-10 text-center text-slate-500 italic bg-[#050505]">No se encontraron usuarios que coincidan con la búsqueda.</td>
+                </tr>
+
+                <tr *ngFor="let user of filteredUsers()" class="hover:bg-white/5 transition-colors group">
+                  <td class="px-5 py-4 font-mono text-xs text-slate-500">#{{ user.id }}</td>
+                  
+                  <td class="px-5 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full bg-darker border border-surfaceBorder flex items-center justify-center font-bold text-cuda text-xs shadow-inner">
+                        {{ user.name.charAt(0).toUpperCase() }}
+                      </div>
+                      <div>
+                        <p class="font-bold text-white flex items-center gap-2">
+                          {{ user.name }}
+                          <span *ngIf="user.password_reset_requested" class="px-2 py-0.5 bg-danger/20 border border-danger text-danger text-[9px] uppercase tracking-widest rounded-full animate-pulse">
+                            Solicitud Cambio Contraseña
+                          </span>
+                        </p>
+                        <p class="text-xs text-slate-400">{{ user.email }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <td class="px-5 py-4">
+                    <span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider"
+                          [ngClass]="user.role === 'admin' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 'bg-surfaceBorder/30 text-slate-300 border border-surfaceBorder'">
+                      {{ user.role }}
+                    </span>
+                  </td>
+                  
+                  <td class="px-5 py-4">
+                    <span class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider"
+                          [ngClass]="user.is_active ? 'text-cuda' : 'text-warning'">
+                      <div class="w-2 h-2 rounded-full" [ngClass]="user.is_active ? 'bg-cuda' : 'bg-warning'"></div>
+                      {{ user.is_active ? 'Activo' : 'Suspendido' }}
+                    </span>
+                  </td>
+                  
+                  <td class="px-5 py-4 text-center">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-[#050505] rounded-full border border-surfaceBorder">
+                      <svg class="w-3.5 h-3.5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      <span class="font-bold" [ngClass]="user.role === 'admin' ? 'text-purple-400' : 'text-white'">
+                        {{ user.role === 'admin' ? '∞' : user.tokens }}
+                      </span>
+                    </div>
+                  </td>
+                  
+                  <td class="px-5 py-4 text-right">
+                    <div class="flex items-center justify-end gap-2 transition-opacity">
+                      
+                      <button *ngIf="user.role === 'normal'" (click)="openTokenModal(user)" title="Gestionar Tokens" class="p-2 text-slate-400 hover:text-cuda hover:bg-cuda/10 rounded border border-transparent hover:border-cuda/20 transition-all">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </button>
+
+                      <button (click)="openEditModal(user)" title="Editar Perfil" class="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-400/10 rounded border border-transparent hover:border-blue-400/20 transition-all">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                      </button>
+
+                      <button (click)="toggleStatus(user)" [disabled]="user.id === authService.currentUser()?.id" [title]="user.is_active ? 'Suspender' : 'Activar'" 
+                              class="p-2 rounded border border-transparent transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+                              [ngClass]="user.is_active ? 'text-slate-400 hover:text-warning hover:bg-warning/10 hover:border-warning/20' : 'text-danger hover:text-cuda hover:bg-cuda/10 hover:border-cuda/20'">
+                        <svg *ngIf="user.is_active" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                        <svg *ngIf="!user.is_active" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      </button>
+
+                      <button *ngIf="user.password_reset_requested" (click)="forcePasswordReset(user)" title="Generar Contraseña Temporal" class="p-2 text-danger hover:text-white hover:bg-danger rounded border border-danger/50 hover:border-danger transition-all animate-pulse">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4v-4l5.659-5.659C9.092 9.89 9 9.462 9 9a6 6 0 019-3.257z" /></svg>
+                      </button>
+
+                      <button (click)="deleteUser(user)" [disabled]="user.id === authService.currentUser()?.id" title="Eliminar Permanentemente" 
+                              class="p-2 text-slate-400 hover:text-danger hover:bg-danger/10 rounded border border-transparent hover:border-danger/20 transition-all disabled:opacity-20 disabled:cursor-not-allowed">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <div *ngIf="isEditModalOpen()" class="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 backdrop-blur-sm animate-fade-in">
+    <div class="bg-surface border border-surfaceBorder rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+      <button (click)="closeEditModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+      
+      <h3 class="text-xl font-bold mb-6 text-white border-b border-surfaceBorder pb-3">Editar Usuario #{{ selectedUserForEdit()?.id }}</h3>
+      
+      <form (ngSubmit)="saveUserEdit()" class="space-y-5">
+        
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Nombre Completo</label>
+          <input type="text" [(ngModel)]="editName" name="editName" class="w-full bg-[#050505] border border-surfaceBorder text-white text-sm rounded-lg focus:ring-cuda focus:border-cuda p-2.5 outline-none">
+        </div>
+        
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Correo Electrónico</label>
+          <input type="email" [(ngModel)]="editEmail" name="editEmail" class="w-full bg-[#050505] border border-surfaceBorder text-white text-sm rounded-lg focus:ring-cuda focus:border-cuda p-2.5 outline-none">
+        </div>
+        
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Rol de Sistema</label>
+          
+          <select [(ngModel)]="editRole" name="editRole" 
+                  [disabled]="selectedUserForEdit()?.id === authService.currentUser()?.id"
+                  class="w-full bg-[#050505] border border-surfaceBorder text-white text-sm rounded-lg focus:ring-cuda focus:border-cuda p-2.5 outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <option value="normal">Usuario Normal (Estudiante)</option>
+            <option value="admin">Administrador (Profesor)</option>
+          </select>
+          
+          <p class="text-[10px] text-warning mt-1" *ngIf="editRole() === 'admin' && selectedUserForEdit()?.id !== authService.currentUser()?.id">
+            Atención: Darás acceso total.
+          </p>
+          
+          <p class="text-[10px] text-blue-400 mt-1" *ngIf="selectedUserForEdit()?.id === authService.currentUser()?.id">
+            🛡️ Por seguridad, no puedes alterar tu propio nivel de privilegios.
+          </p>
+        </div>
+
+        <div class="pt-4 flex justify-end gap-3">
+          <button type="button" (click)="closeEditModal()" class="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">Cancelar</button>
+          <button type="submit" [disabled]="isSaving()" class="bg-cuda hover:bg-cuda/90 text-darker font-bold rounded-lg text-sm px-6 py-2 transition-all disabled:opacity-50 flex items-center gap-2 shadow-lg">
+            <span *ngIf="!isSaving()">Guardar</span>
+            <div *ngIf="isSaving()" class="w-4 h-4 border-2 border-darker border-t-transparent rounded-full animate-spin"></div>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div *ngIf="isTokenModalOpen()" class="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 backdrop-blur-sm animate-fade-in">
+    <div class="bg-surface border border-cuda/30 rounded-2xl w-full max-w-md p-6 shadow-2xl relative shadow-cuda/10">
+      <button (click)="closeTokenModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+      
+      <h3 class="text-xl font-bold mb-2 text-white flex items-center gap-2">
+        <svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+        Gestión de Tokens
+      </h3>
+      <p class="text-xs text-slate-400 mb-6 border-b border-surfaceBorder pb-3">Modificando cuota para: <strong>{{ selectedUserForTokens()?.name }}</strong> (Actual: {{ selectedUserForTokens()?.tokens }})</p>
+      
+      <div class="bg-slate-800 border border-slate-600 rounded-xl p-3 mb-5 flex gap-3 items-start shadow-lg">
+        <svg class="w-4 h-4 text-cuda flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <p class="text-[11px] text-slate-200 leading-relaxed m-0">
+          <strong class="text-white">Sumar/Restar:</strong> Añade o quita tokens al saldo actual del alumno.<br>
+          <strong class="text-white">Establecer:</strong> Sobrescribe el saldo directamente con el valor numérico exacto que introduzcas.
+        </p>
+      </div>
+
+      <form (ngSubmit)="saveTokens()" class="space-y-5">
+        <div class="grid grid-cols-3 gap-3">
+          <label class="cursor-pointer">
+            <input type="radio" [(ngModel)]="tokenAction" name="tokenAction" value="add" class="peer sr-only">
+            <div class="p-2 text-center text-xs font-bold rounded-lg border border-surfaceBorder text-slate-400 peer-checked:bg-cuda/10 peer-checked:border-cuda peer-checked:text-cuda transition-all">Sumar</div>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" [(ngModel)]="tokenAction" name="tokenAction" value="remove" class="peer sr-only">
+            <div class="p-2 text-center text-xs font-bold rounded-lg border border-surfaceBorder text-slate-400 peer-checked:bg-danger/10 peer-checked:border-danger peer-checked:text-danger transition-all">Restar</div>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" [(ngModel)]="tokenAction" name="tokenAction" value="set" class="peer sr-only">
+            <div class="p-2 text-center text-xs font-bold rounded-lg border border-surfaceBorder text-slate-400 peer-checked:bg-blue-400/10 peer-checked:border-blue-400 peer-checked:text-blue-400 transition-all">Establecer</div>
+          </label>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Cantidad de Tokens</label>
+          <input type="number" [(ngModel)]="tokenAmount" name="tokenAmount" min="1" class="w-full bg-[#050505] border border-surfaceBorder text-white text-lg font-bold rounded-lg focus:ring-cuda focus:border-cuda p-3 outline-none text-center">
+        </div>
+
+        <div class="pt-4 flex justify-end gap-3">
+          <button type="button" (click)="closeTokenModal()" class="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">Cancelar</button>
+          <button type="submit" [disabled]="isSaving() || tokenAmount() < 1" class="bg-cuda hover:bg-cuda/90 text-darker font-bold rounded-lg text-sm px-6 py-2 transition-all disabled:opacity-50 flex items-center gap-2 shadow-lg">
+            <span *ngIf="!isSaving()">Aplicar Cambios</span>
+            <div *ngIf="isSaving()" class="w-4 h-4 border-2 border-darker border-t-transparent rounded-full animate-spin"></div>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+<div *ngIf="isTempPasswordModalOpen()" class="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 backdrop-blur-sm animate-fade-in">
+    <div class="bg-surface border border-danger/50 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+      <h3 class="text-xl font-bold mb-4 text-white flex items-center gap-2">
+        <svg class="w-6 h-6 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+        Rescate Exitoso
+      </h3>
+      <p class="text-sm text-slate-300 mb-6">Has generado una contraseña temporal para <strong>{{ rescuedUserName() }}</strong>. Al entrar, el sistema le obligará a cambiarla.</p>
+      
+      <div class="bg-[#050505] border border-surfaceBorder rounded-xl p-6 text-center mb-6">
+        <p class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-2">Contraseña Temporal</p>
+        <p class="text-3xl font-mono text-cuda tracking-widest font-bold break-all">{{ tempPasswordGenerated() }}</p>
+      </div>
+
+      <button (click)="closeTempPasswordModal()" class="w-full bg-surfaceBorder/30 hover:bg-surfaceBorder text-white font-bold py-3 rounded-lg transition-colors">
+        Entendido, cerrar
+      </button>
+    </div>
+  </div>

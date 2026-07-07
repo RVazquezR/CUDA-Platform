@@ -1,0 +1,202 @@
+<div class="flex h-screen bg-background text-white overflow-hidden relative">
+  <app-sidenav class="h-full flex-shrink-0"></app-sidenav>
+
+  <div class="flex-1 flex flex-col min-w-0 relative">
+    <app-header class="flex-shrink-0"></app-header>
+
+    <main class="flex-1 p-6 overflow-y-auto custom-scrollbar">
+      <div class="max-w-[1600px] mx-auto h-full flex flex-col">
+        
+        <div class="flex justify-between items-end mb-6 flex-shrink-0">
+          <div>
+            <h2 class="text-2xl font-bold text-white">Consola de Ejecución CUDA</h2>
+            <p class="text-sm text-slate-400 mt-1">Escribe, compila y ejecuta código de alto rendimiento en la GPU.</p>
+          </div>
+          
+          <button (click)="isGuideOpen.set(true)" class="flex items-center gap-2 bg-surface hover:bg-surfaceBorder border border-surfaceBorder px-4 py-2 rounded-lg text-sm font-bold text-slate-300 hover:text-white transition-all shadow-sm">
+            <svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5-1.253" /></svg>
+            Guía y Ejemplos
+          </button>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+          <div class="lg:col-span-2 min-h-0"><app-code-editor></app-code-editor></div>
+          <div class="min-h-0"><app-file-manager></app-file-manager></div>
+        </div>
+      </div>
+    </main>
+
+    <div *ngIf="isGuideOpen()" class="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm animate-fade-in p-4">
+      <div class="bg-surface border border-surfaceBorder rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden relative">
+        
+        <div class="flex justify-between items-center p-6 border-b border-surfaceBorder bg-darker/50">
+          <h3 class="text-xl font-bold text-white flex items-center gap-3">
+            <svg class="w-6 h-6 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            Guía de Uso CUDA Platform
+          </h3>
+          <button (click)="isGuideOpen.set(false)" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-surfaceBorder transition-colors">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <div class="flex border-b border-surfaceBorder bg-darker">
+          <button (click)="activeGuideTab.set('code')" [class.border-cuda]="activeGuideTab() === 'code'" [class.text-white]="activeGuideTab() === 'code'" class="flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-white transition-colors">Ejemplos CUDA</button>
+          <button (click)="activeGuideTab.set('execution')" [class.border-cuda]="activeGuideTab() === 'execution'" [class.text-white]="activeGuideTab() === 'execution'" class="flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-white transition-colors">Ejecución de Programas</button>
+          <button (click)="activeGuideTab.set('storage')" [class.border-cuda]="activeGuideTab() === 'storage'" [class.text-white]="activeGuideTab() === 'storage'" class="flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-white transition-colors">Sistema de Archivos</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-6">
+          
+          <div *ngIf="activeGuideTab() === 'code'" class="space-y-4 animate-fade-in">
+            
+            <div class="bg-surface border border-surfaceBorder rounded-xl overflow-hidden shadow-sm transition-all">
+              <div class="p-4 bg-darker/50 hover:bg-surfaceBorder/30 cursor-pointer flex justify-between items-center transition-colors"
+                   (click)="expandedSnippet() === 'hello' ? expandedSnippet.set(null) : expandedSnippet.set('hello')">
+                <div>
+                  <h4 class="text-base font-bold text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    Hola Mundo en GPU
+                  </h4>
+                  <p class="text-xs text-slate-400 mt-1">El script más básico para verificar que los hilos de la GPU están respondiendo.</p>
+                </div>
+                <svg class="w-5 h-5 text-slate-500 transform transition-transform duration-300" [class.rotate-180]="expandedSnippet() === 'hello'" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+              </div>
+
+              <div *ngIf="expandedSnippet() === 'hello'" class="border-t border-surfaceBorder animate-fade-in">
+                <div class="flex items-center justify-end gap-2 p-2 bg-[#080808] border-b border-surfaceBorder/50">
+                  <button (click)="copyToClipboard(snippetHelloWorld, 'hello')" class="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded border transition-all" [ngClass]="copiedCode() === 'hello' ? 'bg-cuda/10 text-cuda border-cuda/30' : 'bg-surface hover:bg-surfaceBorder text-slate-300 border-surfaceBorder hover:text-white'">
+                    <svg *ngIf="copiedCode() === 'hello'" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                    {{ copiedCode() === 'hello' ? '¡Copiado!' : 'Copiar' }}
+                  </button>
+                </div>
+                <pre class="bg-[#050505] p-5 text-[13px] font-mono text-slate-300 overflow-x-auto m-0 leading-relaxed">{{ snippetHelloWorld }}</pre>
+              </div>
+            </div>
+
+            <div class="bg-surface border border-surfaceBorder rounded-xl overflow-hidden shadow-sm transition-all">
+              <div class="p-4 bg-darker/50 hover:bg-surfaceBorder/30 cursor-pointer flex justify-between items-center transition-colors"
+                   (click)="expandedSnippet() === 'vector' ? expandedSnippet.set(null) : expandedSnippet.set('vector')">
+                <div>
+                  <h4 class="text-base font-bold text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                    Suma de Vectores Paralela
+                  </h4>
+                  <p class="text-xs text-slate-400 mt-1">Algoritmo matemático clásico que demuestra la división de memoria en bloques e hilos.</p>
+                </div>
+                <svg class="w-5 h-5 text-slate-500 transform transition-transform duration-300" [class.rotate-180]="expandedSnippet() === 'vector'" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+              </div>
+
+              <div *ngIf="expandedSnippet() === 'vector'" class="border-t border-surfaceBorder animate-fade-in">
+                <div class="flex items-center justify-end gap-2 p-2 bg-[#080808] border-b border-surfaceBorder/50">
+                  <button (click)="copyToClipboard(snippetVectorAdd, 'vector')" class="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded border transition-all" [ngClass]="copiedCode() === 'vector' ? 'bg-cuda/10 text-cuda border-cuda/30' : 'bg-surface hover:bg-surfaceBorder text-slate-300 border-surfaceBorder hover:text-white'">
+                    <svg *ngIf="copiedCode() === 'vector'" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                    {{ copiedCode() === 'vector' ? '¡Copiado!' : 'Copiar' }}
+                  </button>
+                </div>
+                <pre class="bg-[#050505] p-5 text-[13px] font-mono text-slate-300 overflow-x-auto m-0 leading-relaxed">{{ snippetVectorAdd }}</pre>
+              </div>
+            </div>
+
+            <div class="bg-surface border border-surfaceBorder rounded-xl overflow-hidden shadow-sm transition-all">
+              <div class="p-4 bg-darker/50 hover:bg-surfaceBorder/30 cursor-pointer flex justify-between items-center transition-colors"
+                   (click)="expandedSnippet() === 'gray' ? expandedSnippet.set(null) : expandedSnippet.set('gray')">
+                <div>
+                  <h4 class="text-base font-bold text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    Procesamiento de Imágenes (Blanco y Negro)
+                  </h4>
+                  <p class="text-xs text-slate-400 mt-1">Programa para leer un archivo BMP de tus Archivos Personales y transformarlo a blanco y negro.</p>
+                </div>
+                <svg class="w-5 h-5 text-slate-500 transform transition-transform duration-300" [class.rotate-180]="expandedSnippet() === 'gray'" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+              </div>
+
+              <div *ngIf="expandedSnippet() === 'gray'" class="border-t border-surfaceBorder animate-fade-in">
+                <div class="flex items-center justify-end gap-2 p-2 bg-[#080808] border-b border-surfaceBorder/50">
+                  <button (click)="copyToClipboard(snippetGrayscale, 'gray')" class="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded border transition-all" [ngClass]="copiedCode() === 'gray' ? 'bg-cuda/10 text-cuda border-cuda/30' : 'bg-surface hover:bg-surfaceBorder text-slate-300 border-surfaceBorder hover:text-white'">
+                    <svg *ngIf="copiedCode() === 'gray'" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                    {{ copiedCode() === 'gray' ? '¡Copiado!' : 'Copiar' }}
+                  </button>
+                  
+                </div>
+                <pre class="bg-[#050505] p-5 text-[13px] font-mono text-slate-300 overflow-x-auto m-0 leading-relaxed">{{ snippetGrayscale }}</pre>
+              </div>
+            </div>
+
+          </div>
+
+          <div *ngIf="activeGuideTab() === 'execution'" class="space-y-6 animate-fade-in text-sm text-slate-300 leading-relaxed">
+            <div class="bg-cuda/10 border border-cuda/30 p-4 rounded-xl flex gap-4">
+              <svg class="w-8 h-8 text-cuda flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <div>
+                <h4 class="font-bold text-white text-base mb-1">El Sistema de Tokens y Colas</h4>
+                <p>Tu posición en la cola de procesamiento depende de tus Tokens. Si posees tokens, tu código entrará en la vía rápida. Si agotas tus tokens, tu ejecución se colocará al final de la cola. Los tokens se renuevan periódicamente. <em>Nota: El Administrador tiene prioridad absoluta.</em></p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              <div class="bg-[#050505] border border-surfaceBorder p-4 rounded-xl">
+                <h4 class="font-bold text-white mb-2 flex items-center gap-2"><svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Recuperación de Sesión</h4>
+                <p>Si envías un código y cambias de pestaña, se guardará tu sesión. Si el programa sigue en espera o ejecución a tu regreso, la terminal se reconectará automáticamente a la tarea.</p>
+              </div>
+              
+              <div class="bg-[#050505] border border-surfaceBorder p-4 rounded-xl">
+                <h4 class="font-bold text-white mb-2 flex items-center gap-2"><svg class="w-5 h-5 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Concurrencia y Timeout</h4>
+                <p>El administrador establece la concurrencia máxima permitida y el tiempo límite. Si tu código supera el tiempo permitido, será abortado automáticamente.</p>
+              </div>
+
+              <div class="bg-[#050505] border border-surfaceBorder p-4 rounded-xl">
+                <h4 class="font-bold text-white mb-2 flex items-center gap-2"><svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg> Restauración Gratuita</h4>
+                <p>Si la ejecución finalizó mientras estabas en otra ventana, usa el botón "Restaurar Última Ejecución" para ver la salida por consola sin gastar tokens.</p>
+              </div>
+
+              <div class="bg-[#050505] border border-surfaceBorder p-4 rounded-xl">
+                <h4 class="font-bold text-white mb-2 flex items-center gap-2"><svg class="w-5 h-5 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Abortar Ejecución</h4>
+                <p>Si pulsas el botón rojo para abortar un proceso en curso, el sistema detendrá la tarea inmediatamente y te reembolsará el token utilizado.</p>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="activeGuideTab() === 'storage'" class="space-y-6 animate-fade-in text-sm text-slate-300 leading-relaxed">
+            
+            <div class="bg-danger/10 border border-danger/30 p-4 rounded-xl flex gap-4">
+              <svg class="w-8 h-8 text-danger flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              <div>
+                <h4 class="font-bold text-white text-base mb-1">Precaución: Límite de Cuota Máxima de Almacenamiento</h4>
+                <p>Si tu código genera un archivo de salida (ej. <code>resultado.bmp</code>) y junto a todos tus archivos se excede tu cuota de almacenamiento disponible, el archivo será descartado permanentemente por el sistema para proteger el disco del servidor. Consulta tu cuota en el apartado "Mis Métricas".</p>
+              </div>
+            </div>
+
+            <ul class="space-y-4 mt-6">
+              <li class="flex gap-3">
+                <div class="mt-0.5"><svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+                <div>
+                  <strong class="text-white">Llamadas en el código:</strong> Cuando escribas código CUDA, llama a los archivos exactamente con el nombre que ves en la lista de la derecha (ej. <code>fopen("imagen.bmp", "r");</code>).
+                </div>
+              </li>
+              <li class="flex gap-3">
+                <div class="mt-0.5"><svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+                <div>
+                  <strong class="text-white">Archivos Globales vs Personales:</strong> Los archivos globales los proporciona el administrador y no consumen tu cuota. Además, si subes un archivo personal que se llama exactamente igual que uno global, tu código CUDA siempre usará el tuyo.
+                </div>
+              </li>
+              <li class="flex gap-3">
+                <div class="mt-0.5"><svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+                <div>
+                  <strong class="text-white">Sobrescritura y Nombres:</strong> El sistema de subida no sobrescribe. Si subes dos veces el mismo archivo, verás duplicados en la lista. Para evitar que tu código se confunda y procese el archivo incorrecto, renómbralos en tu ordenador antes de subirlos. Asegúrate también de que tu código genere archivos de salida con nombres únicos.
+                </div>
+              </li>
+              <li class="flex gap-3">
+                <div class="mt-0.5"><svg class="w-5 h-5 text-cuda" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+                <div>
+                  <strong class="text-white">Gestión de Interfaz:</strong> Pasa el ratón por encima de cualquier archivo personal en la lista para revelar los botones rápidos de Descarga y Eliminación.
+                </div>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+</div>
